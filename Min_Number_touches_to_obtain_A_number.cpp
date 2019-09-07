@@ -1,4 +1,4 @@
-/*
+/* WRONG ANSWER
 You are given old touch smartphone numbers having dial pad and calculator app.
 Aim: The goal is to type a number on the dial pad.
 But as the phone is old, some of the numbers and some operations can’t be touched.
