@@ -1,2 +1,2 @@
-# standard_codes
+# SAMSUNG
 competitive codes for samsunf
