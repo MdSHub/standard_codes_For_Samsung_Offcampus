@@ -1,4 +1,4 @@
-  /* wrong solution */
+
 /*
 There is an island surrounded by oil mines.
 You will be given n companies and m oil mines having values.
