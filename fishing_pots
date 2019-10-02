@@ -211,3 +211,8 @@ int main(){
         ctr++;
     }
 }
+
+
+
+//2nd implementation from geeks of geeks
+//https://www.geeksforgeeks.org/samsung-semiconductor-institute-of-research-ssir-software-intern-fte-set-1/
