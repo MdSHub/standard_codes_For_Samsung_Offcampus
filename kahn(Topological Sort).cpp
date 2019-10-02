@@ -1,3 +1,5 @@
+//DFS based
+
 class Graph 
 { 
     int V;    // No. of vertices' 
