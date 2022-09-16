@@ -6,211 +6,236 @@ For rest of the fishermen, ignore and assign any one.
 Write a program to return sum of minimum distance need to walk for fishermen.
 Note : The problem can be solved using Recursion and Backtracking by considering all possible combinations.*/
 
-#include <iostream>
-using namespace std;
+#define _CRT_SECURE_NO_WARNINGS
+#include<stdio.h>
 
-int visited[3];
-int gateLoc[3];
-int numFishermen[3];
-int N;
-int minCost, flagOut;
-int numPermutations=0;
-int permutations[50];
-bool allVisited(){
-    if(visited[0]==1 && visited[1]==1 && visited[2]==1)
-        return true;
-    return false;
+#define MAX 3
+
+int fishspot[100]; // fishing spots
+int gate[MAX]; // position of gates
+int fishermen[MAX]; // no of fishermen at each gate
+int N; // total no of fishing spots
+int visited[MAX]; // occupied fishing spots
+int Answer; // result
+
+//To unmark spots occupied by fishermen of gate# index
+void reset_fishspot(int index)
+{
+	int i;
+	for (i = 1; i <= N; i++)
+		if (fishspot[i] == index + 1)
+			fishspot[i] = 0;
 }
 
-int abs(int x){
-    if(x>=0){
-        return x;
-    }else{
-        return -x;
-    }
+// Calculate minimum distance while allotting spots to
+// fishermen of gate# index.
+// Returns number of positions possible with minimum distance.
+// pos1, pos2 is used to return positions
+int calculate_distance(int index, int*pos1, int *pos2, int *score)
+{
+	int i, sum = 0, left_min = 999999, right_min = 999999,
+									left, right, npos = 0;
+	*pos1 = *pos2 = *score = 0;
+
+	left = right = gate[index];
+
+	// Allot spots to all fishermen except last based on
+	// minimum distance
+	for (i = 1; i < fishermen[index]; i++)
+	{
+		if (fishspot[gate[index]] == 0)
+		{
+			sum++;
+			fishspot[gate[index]] = index + 1;
+		}
+		else
+		{
+			left_min = right_min = 999999;
+
+			while ((left > 0) && (fishspot[left] > 0))
+				left--;
+
+			while ((right <= N) && (fishspot[right] > 0))
+				right++;
+
+			if ((left > 0) && (fishspot[left] == 0))
+				left_min = gate[index] - left + 1;
+
+			if ((right <= N) && (fishspot[right] == 0))
+				right_min = right - gate[index] + 1;
+
+			if (right_min == left_min)
+			{
+				// Place 2 fishermen, if available
+				if ((fishermen[index] - i - 1) > 1)
+				{
+					fishspot[left] = fishspot[right] = index + 1;
+					sum += (2 * left_min);
+					i++;
+
+					// If all fishermen are alloted spots
+					if (i == fishermen[index])
+					{
+						npos = 1;
+						*score = sum;
+						return npos;
+					}
+				}
+				else
+				{
+					sum += left_min;
+					fishspot[left] = index + 1;
+				}
+			}
+			else if (left_min < right_min)
+			{
+				sum += left_min;
+				fishspot[left] = index + 1;
+			}
+			else if (right_min < left_min)
+			{
+				sum += right_min;
+				fishspot[right] = index + 1;
+			}
+		}
+	}
+
+	left_min = right_min = 99999;
+
+	// Allot spot to last fishermen
+	while ((left > 0) && (fishspot[left] > 0))
+		left--;
+
+	if ((left > 0) && (fishspot[left] == 0))
+		left_min = gate[index] - left + 1;
+
+	while ((right <= N) && (fishspot[right] > 0))
+		right++;
+
+	if ((right <= N) && (fishspot[right] == 0))
+		right_min = right - gate[index] + 1;
+
+	if ((sum + left_min) == (sum + right_min))
+	{
+		npos = 2;
+		*pos1 = left;
+		*pos2 = right;
+		*score = sum + left_min;
+	}
+	else if ((sum + left_min) > (sum + right_min))
+	{
+		npos = 1;
+		*score = sum + right_min;
+		fishspot[right] = index + 1;
+	}
+	else if ((sum + left_min) < (sum + right_min))
+	{
+		npos = 1;
+		*score = sum + left_min;
+		fishspot[left] = index + 1;
+	}
+
+	return npos;
 }
 
-int cost_calc(int spots[]){
-    int cost=0;
-    for(int i=0; i<N; i++){
-        if(spots[i]==1){
-            cost+=abs(i-gateLoc[0])+1;
-        }
-        if(spots[i]==2){
-            cost+=abs(i-gateLoc[1])+1;
-        }
-        if(spots[i]==3){
-            cost+=abs(i-gateLoc[2])+1;
-        }
-    }
-    //cout<<"\n SPOTS : \t";
-    //for(int i=0; i<N; i++)
-    //    cout<<spots[i]<<"\t";
-    //cout<<"\n COST : \t"<<cost<<endl;
-    return cost;
+// Solve is used to select next gate and generate all combinations.
+void solve(int index, int sum, int count)
+{
+	int npos, pos1, pos2, score, i;
+
+	visited[index] = 1;
+
+	if (sum > Answer)
+		return;
+
+	npos = calculate_distance(index, &pos1, &pos2, &score);
+	sum += score;
+
+	if (count == MAX)
+	{
+		if (Answer > sum)
+			Answer = sum;
+
+		return;
+	}
+
+	if (npos == 1)
+	{
+		for (i = 0; i < MAX; i++)
+		{
+			if (visited[i] == 0)
+			{
+				solve(i, sum, count + 1);
+				visited[i] = 0;
+				reset_fishspot(i);
+			}
+		}
+	}
+	else if (npos == 2)
+	{
+		fishspot[pos1] = index + 1;
+		for (i = 0; i < MAX; i++)
+		{
+			if (visited[i] == 0)
+			{
+				solve(i, sum, count + 1);
+				visited[i] = 0;
+				reset_fishspot(i);
+			}
+		}
+
+		fishspot[pos1] = 0;
+		fishspot[pos2] = index + 1;
+		for (i = 0; i < MAX; i++)
+		{
+			if (visited[i] == 0)
+			{
+				solve(i, sum, count + 1);
+				visited[i] = 0;
+				reset_fishspot(i);
+			}
+		}
+		fishspot[pos2] = 0;
+	}
 }
 
+int main()// driver function
+{
 
+		int i;
+				
+		
+		N=10; // total no of fishing spots
+		
+		//position of gates(1-based indexing)
+		gate[0]=4;
+		gate[1]=6;
+		gate[2]=10;
+		
+		//no of fishermen at each gate
+		fishermen[0]=5; //gate1
+		fishermen[1]=2; //gate 2
+		fishermen[2]=2; //gate 3
+		
+		
 
+		for (i = 1; i <= N; i++)
+			fishspot[i] = 0;
 
-void genPermute(int rec_dep, int x){
-    if(rec_dep==3){
-        //cout<<x<<endl;
-        permutations[numPermutations++]=x;
-        return;
-    }
-    for(int i=1; i<4; i++){
-        if(!visited[i-1]){
-            visited[i-1]=1;
-            if(numFishermen[i-1]%2==0){
-                genPermute(rec_dep+1, x*100+i*10+7);
-                genPermute(rec_dep+1, x*100+i*10+9);
-            }else{
-                genPermute(rec_dep+1, x*100+i*10+8);
-            }
-            visited[i-1]=0;
-        }
-    }
+		Answer = 999999;
+
+		for (i = 0; i < MAX; i++)
+		{
+			solve(i, 0, 1);
+			visited[i] = 0;
+			reset_fishspot(i);
+		}
+
+		printf("%d\n", Answer);
+	
+	return 0;
 }
 
-
-int* fillGate(int spots[], int gateNum, int bVal){
-    int n = numFishermen[gateNum-1];
-    int loc = gateLoc[gateNum-1];
-    char bias='N';
-    if(bVal==7)
-        bias='L';
-    else if(bVal==8)
-        bias='N';
-    else
-        bias='R';
-
-    while(n>0){
-        int l_index=-1;
-        int r_index=-1;
-
-
-        for(int l=loc; l>=0; l--){
-            if(spots[l]==-1){
-                l_index=l;
-                break;
-            }
-        }
-
-        for(int r=loc; r<N; r++){
-            if(spots[r]==-1){
-                r_index=r;
-                break;
-            }
-        }
-
-        //cout<<"\nFOR n = "<<n<<"\tl_index = "<<l_index<<"\tr_index = "<<r_index;
-        int l_distance = abs(l_index-loc);
-        int r_distance = abs(r_index-loc);
-
-
-        if((l_index==-1) || (r_distance<l_distance)){
-            //cout<<"\nCASE 1";
-            spots[r_index]=gateNum;
-            n-=1;
-            continue;
-        }
-
-
-        if((r_index==-1) || (l_distance<r_distance)){
-            //cout<<"\nCASE 2";
-            spots[l_index]=gateNum;
-            n-=1;
-            continue;
-        }
-
-        if(l_distance==r_distance){
-            if(l_distance==0){
-                //cout<<"\nCASE 3";
-                spots[l_index]=gateNum;
-                n-=1;
-                continue;
-            }
-            if(n>=2){
-                //cout<<"\nCASE 4";
-                n-=2;
-                spots[r_index]=gateNum;
-                spots[l_index]=gateNum;
-            }else if(n==1){
-                if(bias=='L'){
-                    //cout<<"\nCASE 5";
-                    n-=1;
-                    spots[l_index]=gateNum;
-                }else{
-                    //cout<<"\nCASE 6";
-                    n-=1;
-                    spots[r_index]=gateNum;
-                }
-            }
-        }
-
-    }
-    return spots;
-}
-
-
-int evaluatePermutation(int p){
-    int spots[N];
-    for(int i=0; i<N; i++)
-        spots[i]=-1;
-
-    int X[6];
-    //cout<<"\n"<<p;
-    for(int i=5; i>=0; i--){
-        X[i]=p%10;
-        p=p/10;
-    }
-
-    for(int i=0; i<6; i+=2){
-        fillGate(spots, X[i], X[i+1]);
-    }
-    int cost = cost_calc(spots);
-    return cost;
-
-}
-
-
-int main(){
-    int test_cases;
-    cin>>test_cases;
-    int ctr=1;
-    while(test_cases>0){
-        test_cases--;
-        cin>>N;
-        int l1, l2, l3, n1, n2, n3;
-        cin>>l1>>n1;
-        cin>>l2>>n2;
-        cin>>l3>>n3;
-        int spot[N];
-        for(int i=0; i<N; i++)
-        {
-            spot[i]=-1;
-        }
-        numFishermen[0]=n1;
-        gateLoc[0]=l1-1;
-        numFishermen[1]=n2;
-        gateLoc[1]=l2-1;
-        numFishermen[2]=n3;
-        gateLoc[2]=l3-1;
-        for(int i=0; i<3; i++)
-            visited[i]=0;
-        //cout<<"#"<<ctr<<" "<<minCost<<endl;
-        genPermute(0, 0);
-        minCost=999999;
-        for(int i=0; i<numPermutations; i++){
-            //cout<<"\n FOR : "<<permutations[i];
-            int cost = evaluatePermutation(permutations[i]);
-            minCost = min(minCost, cost);
-        }
-        cout<<"#"<<ctr<<" "<<minCost<<endl;
-        ctr++;
-    }
-}
 
 
 
