@@ -15,86 +15,117 @@ What is the best algorithm to do it?
 #include <iostream>
 using namespace std;
 
-#define lim 100
-int overflow_numbers[lim];
-int k;
-int num_pots;
+int n, k;
+int arr[1000];
+int dp[1000][1000];
 
+int ans = 100000;
 
+void merge(int arr[], int l, int m, int r)
+{
+  int i, j, k;
+  int n1 = m - l + 1;
+  int n2 = r - m;
+  int fh[n1], sh[n2];
 
+  for (i = 0; i < n1; i++)
+  {
+    fh[i] = arr[l + i];
+  }
+  for (j = 0; j < n2; j++)
+  {
+    sh[j] = arr[m + 1 + j];
+  }
 
-void merger(int l, int m, int r){
-    int i,j,k;
-    int n1=m-l+1;
-    int n2=r-m;
-    int L[n1], R[n2];
-    for(int i=0; i<n1; i++){
-        L[i]=overflow_numbers[l+i];
+  i = 0, j = 0, k = l;
+
+  while (i < n1 && j < n2)
+  {
+    if (fh[i] <= sh[j])
+    {
+      arr[k] = fh[i];
+      i++;
     }
-    for(int j=0; j<n2; j++){
-        R[j]=overflow_numbers[m+1+j];
+    else
+    {
+      arr[k] = sh[j];
+      j++;
     }
-
-
-    i=0;
-    j=0;
-    k=l;
-    while(i<n1 && j<n2){
-        if(L[i]<=R[j]){
-            overflow_numbers[k]=L[i];
-            i++;
-        }else{
-            overflow_numbers[k]=R[j];
-            j++;
-        }
-        k++;
-    }
-    while(i<n1){
-        overflow_numbers[k]=L[i];
-        k++;
-        i++;
-    }
-    while(j<n2){
-        overflow_numbers[k]=R[j];
-        k++;
-        j++;
-    }
+    k++;
+  }
+  while (i < n1)
+  {
+    arr[k] = fh[i];
+    i++;
+    k++;
+  }
+  while (j < n2)
+  {
+    arr[k] = sh[j];
+    j++;
+    k++;
+  }
 }
 
-
-void merge_sort(int l, int r){
-    if(l<r){
-        int m=l+(r-l)/2;
-        merge_sort(l, m);
-        merge_sort(m+1, r);
-        merger(l, m, r);
-    }
+void mergesort(int arr[], int l, int r)
+{
+  if (l < r)
+  {
+    int m = l + (r - l) / 2;
+    mergesort(arr, l, m);
+    mergesort(arr, m + 1, r);
+    merge(arr, l, m, r);
+  }
 }
 
+int solve()
+{
+  for (int i = 1; i <= n; i++)
+  {
+    dp[i][1] = (n - i + 1) * arr[i];
+  }
 
-
-int main(){
-    cin>>num_pots;
-    for(int i=0; i<num_pots; i++){
-        int x;
-        cin>>x;
-        overflow_numbers[i]=x;
+  for (int i = 1; i <= n; i++)
+  {
+    for (int j = 2; j <= k; j++)
+    {
+      for (int p = i + 1; p <= n; p++)
+      {
+        dp[i][j] = min(dp[i][j], dp[p][j - 1] + (p - i) * arr[i]);
+      }
     }
-    cin>>k;
-    merge_sort(0,num_pots-1);
+  }
 
+  for (int i = 0; i < n; i++)
+  {
+    ans = min(ans, dp[i][k]);
+  }
+  return ans;
+}
 
-
-    for(int i=num_pots-1; i>0; i--){
-        overflow_numbers[i] = max(0,overflow_numbers[i]-overflow_numbers[i-1]);
+int main()
+{
+  int t;
+  cin >> t;
+  while (t--)
+  {
+    cin >> n >> k;
+    for (int i = 1; i <= n; i++)
+    {
+      cin >> arr[i];
     }
 
+    mergesort(arr, 1, n);
 
-
-    int total_stones=0;
-    for(int i=0; i<k; i++){
-        total_stones+=(overflow_numbers[i]*(num_pots-i));
+    for (int i = 0; i < 1000; i++)
+    {
+      for (int j = 0; j < 1000; j++)
+      {
+        dp[i][j] = 100000;
+      }
     }
-    cout<<"\nTotal Stones Required : "<<total_stones<<endl;
+    cout << solve() << endl;
+  }
 
+  return 0;
 }
